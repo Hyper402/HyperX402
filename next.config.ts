@@ -1,17 +1,23 @@
 // next.config.ts
 import type { NextConfig } from "next";
 
-const nextConfig = {
+/**
+ * We intentionally type the webpack args as `any` to avoid TS
+ * compiler complaints in CI (Vercel) where Next's internal types
+ * aren't exported in a stable path.
+ */
+const nextConfig: NextConfig = {
   reactStrictMode: true,
 
-  // Used for production builds on Vercel too
-  webpack(config) {
-    // force the browser build of @irys/upload (avoids node-only code)
+  webpack(config: any, _ctx: any) {
+    // Ensure objects exist
+    config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
+      // Force the browser build of @irys/upload (avoids node-only code)
       "@irys/upload": "@irys/upload/dist/web/index.js",
 
-      // prevent bundling node-only deps in the browser
+      // Never bundle node-only deps in the client
       inquirer: false,
       "external-editor": false,
       child_process: false,
@@ -33,6 +39,6 @@ const nextConfig = {
 
     return config;
   },
-} satisfies NextConfig; // gives proper types, no implicit any
+};
 
 export default nextConfig;
