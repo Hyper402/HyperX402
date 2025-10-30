@@ -5,10 +5,7 @@ import type { WalletContextState } from '@solana/wallet-adapter-react';
 import { getUmi } from './umi';
 
 import { generateSigner, percentAmount } from '@metaplex-foundation/umi';
-import {
-  createNft,
-  TokenStandard,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { createNft } from '@metaplex-foundation/mpl-token-metadata';
 
 /** Helper: file → data URI */
 async function fileToDataUri(file: File): Promise<string> {
@@ -92,9 +89,8 @@ export async function mintAgentNFT(
   await createNft(umi, {
     mint,
     name: agentName,
-    uri: metadataDataUri,            // <= data:application/json;base64,...
+    uri: metadataDataUri, // <= data:application/json;base64,...
     sellerFeeBasisPoints: percentAmount(0), // 0% royalties
-    tokenStandard: TokenStandard.NonFungible,
     isMutable: true,
   }).sendAndConfirm(umi);
 
