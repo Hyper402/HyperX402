@@ -1,13 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // webpack is still used for production builds; keep aliases in both places
+  reactStrictMode: true,
+
+  // Webpack customization (used in production builds)
   webpack: (config) => {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      // force the browser build of @irys/upload
+
+      // Force the browser build of @irys/upload (avoid Node-only imports)
       '@irys/upload': '@irys/upload/dist/web/index.js',
 
-      // never try to bundle these node-only deps for the client
+      // Prevent bundling of Node-only dependencies for browser builds
       inquirer: false,
       'external-editor': false,
       'child_process': false,
@@ -18,6 +21,7 @@ const nextConfig = {
       path: false,
       os: false,
     };
+
     config.resolve.fallback = {
       ...(config.resolve.fallback || {}),
       fs: false,
@@ -25,26 +29,10 @@ const nextConfig = {
       os: false,
       child_process: false,
     };
-    return config;
-  },
 
-  // Turbopack dev mode needs its own alias map
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        '@irys/upload': '@irys/upload/dist/web/index.js',
-        inquirer: false,
-        'external-editor': false,
-        'child_process': false,
-        'node:fs': false,
-        'node:path': false,
-        'node:os': false,
-        fs: false,
-        path: false,
-        os: false,
-      },
-    },
+    return config;
   },
 };
 
+// ❌ Removed invalid experimental.turbo block (Next.js 16 no longer supports it)
 module.exports = nextConfig;
