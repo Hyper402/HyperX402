@@ -1,22 +1,23 @@
-/** @type {import('next').NextConfig} */
+// next.config.ts
+import type { NextConfig } from "next";
+
 const nextConfig = {
   reactStrictMode: true,
 
-  // Webpack customization (used in production builds)
-  webpack: (config) => {
+  // Used for production builds on Vercel too
+  webpack(config) {
+    // force the browser build of @irys/upload (avoids node-only code)
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
+      "@irys/upload": "@irys/upload/dist/web/index.js",
 
-      // Force the browser build of @irys/upload (avoid Node-only imports)
-      '@irys/upload': '@irys/upload/dist/web/index.js',
-
-      // Prevent bundling of Node-only dependencies for browser builds
+      // prevent bundling node-only deps in the browser
       inquirer: false,
-      'external-editor': false,
-      'child_process': false,
-      'node:fs': false,
-      'node:path': false,
-      'node:os': false,
+      "external-editor": false,
+      child_process: false,
+      "node:fs": false,
+      "node:path": false,
+      "node:os": false,
       fs: false,
       path: false,
       os: false,
@@ -32,7 +33,6 @@ const nextConfig = {
 
     return config;
   },
-};
+} satisfies NextConfig; // gives proper types, no implicit any
 
-// ❌ Removed invalid experimental.turbo block (Next.js 16 no longer supports it)
-module.exports = nextConfig;
+export default nextConfig;
