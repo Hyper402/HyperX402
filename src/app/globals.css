@@ -24,3 +24,282 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* --- HyperX402 hero styles --- */
+.mesh-bg {
+  position: absolute;
+  inset: -10%;
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    rgba(155, 92, 255, 0.35),
+    rgba(255, 59, 107, 0.35),
+    rgba(155, 92, 255, 0.35)
+  );
+  filter: blur(60px) saturate(120%);
+  animation: hx402-spin 32s linear infinite;
+}
+
+@keyframes hx402-spin {
+  0% { transform: rotate(0deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1.2); }
+}
+
+.hx-card {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.hx-float {
+  animation: hx402-float 14s ease-in-out infinite;
+}
+
+@keyframes hx402-float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* --- Site-wide subtle backdrop (behind everything) --- */
+.page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 600px at 20% 10%, rgba(155,92,255,0.18), transparent 60%),
+    radial-gradient(1000px 500px at 80% 20%, rgba(255,59,107,0.16), transparent 60%),
+    radial-gradient(900px 600px at 50% 100%, rgba(255,255,255,0.05), transparent 60%),
+    #0a0b10;
+}
+
+/* Smooth fade under the hero so it doesn’t hard-cut */
+.hero-fade {
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 240px;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0) 0%,
+    rgba(10,11,16,0.65) 45%,
+    rgba(10,11,16,1) 100%
+  );
+}
+
+/* Soft section background so Features/Stats match the hero vibe */
+.section-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(800px 380px at 10% 0%, rgba(155,92,255,0.08), transparent 60%),
+    radial-gradient(800px 380px at 90% 0%, rgba(255,59,107,0.08), transparent 60%);
+}
+
+/* --- Smooth section blending --- */
+.section {
+  position: relative;
+  padding: 4rem 0;
+}
+.section::before,
+.section::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 140px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* fade from previous area into this section */
+.section::before {
+  top: -140px;
+  background: linear-gradient(
+    to bottom,
+    rgba(10,11,16,0) 0%,
+    rgba(10,11,16,0.55) 55%,
+    rgba(10,11,16,1) 100%
+  );
+}
+/* fade out of this section into the next area */
+.section::after {
+  bottom: -140px;
+  background: linear-gradient(
+    to top,
+    rgba(10,11,16,0) 0%,
+    rgba(10,11,16,0.55) 55%,
+    rgba(10,11,16,1) 100%
+  );
+}
+
+/* subtle colored wash behind a section (no hard edges) */
+.section-wash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(700px 320px at 12% 0%, rgba(155,92,255,0.08), transparent 60%),
+    radial-gradient(700px 320px at 88% 0%, rgba(255,59,107,0.08), transparent 60%);
+}
+
+/* prettier glass + outline */
+.glass {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+}
+.glass-soft {
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  height: 28px;
+  padding: 0 .75rem;
+  font-size: .75rem;
+  letter-spacing: .02em;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.badge-dot {
+  width: 8px; height: 8px;
+  border-radius: 999px;
+  background: #9b5cff;
+  box-shadow: 0 0 12px #9b5cffaa;
+}
+.cta {
+  border-radius: 14px;
+  padding: .8rem 1.1rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.cta-primary {
+  background: linear-gradient(90deg,#9b5cff, #ff3b6b);
+  color: #fff;
+  border: 0;
+  box-shadow: 0 12px 32px rgba(255,59,107,0.25);
+}
+.caption-row {
+  display:flex;
+  gap:14px;
+  align-items:center;
+  flex-wrap:wrap;
+  color: rgba(255,255,255,0.75);
+  font-size:.8rem;
+  margin-top:.9rem;
+}
+.caption-chip {
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.35rem .6rem;
+  border-radius:12px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  font-size:.75rem;
+}
+.caption-dot {
+  width:6px;
+  height:6px;
+  border-radius:999px;
+  background:#fff3;
+}
+.section-title {
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+}
+.section-pill {
+  font-size:.75rem;
+  padding:.2rem .55rem;
+  border-radius:999px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  color:#cfcfcf;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+
+/* ===== central watermark character ===== */
+.hero-stage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-figure {
+  position: relative;
+  width: min(82vw, 1300px);    /* bigger */
+  max-width: 110vmin;          /* allow huge on tall screens */
+  opacity: 0.25;               /* a bit stronger since it's watermark */
+  filter: drop-shadow(0 40px 90px rgba(0,0,0,0.5));
+  -webkit-mask-image: radial-gradient(72% 72% at 50% 50%, #000 62%, transparent 100%);
+          mask-image: radial-gradient(72% 72% at 50% 50%, #000 62%, transparent 100%);
+}
+
+/* keep it sane on small screens */
+@media (max-width: 640px) {
+  .hero-figure {
+    width: 115vmin;
+    max-width: none;
+    opacity: 0.25;
+  }
+}
+
+/* ===== Techy raindrops ===== */
+.rain-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.4;
+}
+
+/* breathing + parallax wrapper for hero figure */
+.hero-figure-wrap {
+  position: relative;
+  will-change: transform;
+  animation: hero-breathe 8s ease-in-out infinite;
+}
+@keyframes hero-breathe {
+  0%,100% { transform: translate3d(0,0,0) scale(1); }
+  50%     { transform: translate3d(0,-6px,0) scale(1.012); }
+}
+
+/* Circular halo around the character (no rectangular edges) */
+.hero-halo {
+  position: absolute;
+  inset: -6vmin;
+  pointer-events: none;
+  border-radius: 50%;
+  /* conic glints + radial falloff */
+  background:
+    radial-gradient(closest-side, rgba(255,255,255,0.12), transparent 70%),
+    conic-gradient(from 0deg,
+      rgba(155,92,255,0.35) 0deg,
+      rgba(255,59,107,0.25) 120deg,
+      rgba(155,92,255,0.35) 240deg,
+      rgba(255,59,107,0.25) 360deg);
+  /* keep it ring-shaped (no box) */
+  -webkit-mask: radial-gradient(circle, transparent 60%, #000 60% 64%, transparent 64%);
+          mask: radial-gradient(circle, transparent 60%, #000 60% 64%, transparent 64%);
+  filter: blur(0.3px);
+  opacity: .32;
+  animation: halo-spin 26s linear infinite, halo-breathe 6s ease-in-out infinite;
+}
+@keyframes halo-spin { to { transform: rotate(360deg); } }
+@keyframes halo-breathe {
+  0%,100% { box-shadow: 0 0 120px rgba(155,92,255,0.25), inset 0 0 80px rgba(255,59,107,0.15); }
+  50%     { box-shadow: 0 0 160px rgba(155,92,255,0.35), inset 0 0 100px rgba(255,59,107,0.22); }
+}
