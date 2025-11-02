@@ -19,7 +19,7 @@ import {
 type Msg = { role: "user" | "agent"; text: string };
 
 /** Strong guardrailed system prompt built around the NFT metadata */
-function buildSystemPrompt(agent?: OnchainAgent) {
+function buildSystemPrompt(agent?: OnchainAgent | null) {
   const name = agent?.name ?? "H402 Agent";
   const behavior = agent?.prompt ? `Context for behavior: ${agent.prompt}` : "";
 
