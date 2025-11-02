@@ -1,7 +1,9 @@
+// src/lib/umi.ts
 "use client";
 
 import { useEffect, useRef } from "react";
-import { createUmi, Umi } from "@metaplex-foundation/umi-bundle-defaults";
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+import type { Umi } from "@metaplex-foundation/umi";
 import { mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import { walletAdapterIdentity } from "@metaplex-foundation/umi-signer-wallet-adapters";
 import { bundlrUploader } from "@metaplex-foundation/umi-uploader-bundlr";
