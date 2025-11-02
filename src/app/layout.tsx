@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "HyperX402",
-  description: "Solana x402 agents",
+  description: "Payment ecosystem and protocol on HTTP with AI agents on behaviour on Solana.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -17,9 +17,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* Everything else overlays the animation */}
         <div className="relative z-10">
+          {/* SolanaWalletProvider and Navbar can be client components.
+             Server layout can render client children — that’s allowed. */}
           <SolanaWalletProvider>
             <Navbar />
-            {children}
+            <main className="pt-16">{children}</main>
           </SolanaWalletProvider>
         </div>
       </body>

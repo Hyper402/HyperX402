@@ -19,7 +19,7 @@ export function OverallStats() {
         <h2 className="text-3xl md:text-4xl font-bold">Overall Stats</h2>
         <span className="section-pill">Past 24h</span>
       </div>
-      <p className="opacity-70 mb-8">Global statistics for the HyperX402 ecosystem.</p>
+      <p className="opacity-69 mb-8">Global statistics for the X402 ecosystem.</p>
 
       {/* Top metric cards */}
       <div className="grid md:grid-cols-4 gap-6">

@@ -1,56 +1,124 @@
+// src/app/mint/page.tsx
 "use client";
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import ClientOnly from "@/components/ClientOnly";
+import { useUmi } from "@/lib/umi";
 import { mintAgentNFT } from "@/lib/mintAgent";
+import { uploadAgentMetadata } from "@/lib/upload";
 
 export default function MintPage() {
-  const wallet = useWallet();
+  const router = useRouter();
+  const { publicKey, signMessage } = useWallet();
+  const umi = useUmi();
 
   // form state
-  const [agentName, setAgentName] = React.useState("Nyx #001 • H402");
-  const [model, setModel] = React.useState("gpt-4o-mini");
+  const [agentName, setAgentName] = React.useState("User #001 • H402");
+  const [model, setModel] = React.useState("Claude-3.5-Sonnet");
   const [temperature, setTemperature] = React.useState<number>(0.6);
   const [prompt, setPrompt] = React.useState(
-    "You are Nyx, a helpful on-chain agent. Keep answers concise and confident."
+    "You are User, a helpful on-chain agent. Keep answers concise and confident."
   );
+
+  // image preview
   const [imgFile, setImgFile] = React.useState<File | undefined>();
   const [imgPreview, setImgPreview] = React.useState<string>("");
 
   // tx state
   const [minting, setMinting] = React.useState(false);
+  const [stage, setStage] = React.useState<"idle"|"uploading"|"minting"|"finalizing">("idle");
   const [mintAddress, setMintAddress] = React.useState<string>("");
   const [err, setErr] = React.useState<string>("");
+
+  const walletReady = !!publicKey && typeof signMessage === "function";
 
   function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
+
+    // Small guardrails: PNG/JPG only, <= 4 MB
+    const okType = /image\/(png|jpeg)/i.test(f.type);
+    const okSize = f.size <= 4 * 1024 * 1024;
+    if (!okType) {
+      setErr("Only PNG or JPG images are supported.");
+      return;
+    }
+    if (!okSize) {
+      setErr("Image too large. Please keep it ≤ 4 MB.");
+      return;
+    }
+
+    setErr("");
     setImgFile(f);
-    const url = URL.createObjectURL(f);
-    setImgPreview(url);
+    setImgPreview(URL.createObjectURL(f));
   }
 
   async function onMint() {
     setErr("");
     setMintAddress("");
-    if (!wallet.connected || !wallet.publicKey) {
-      setErr("Connect your wallet first.");
+
+    if (!walletReady) {
+      setErr(
+        "Your connected wallet doesn't support signMessage. Use Phantom, Backpack, or Solflare desktop, then reconnect."
+      );
       return;
     }
+    if (!imgFile) {
+      setErr("Please choose an image (PNG/JPG).");
+      return;
+    }
+
     try {
       setMinting(true);
-      const mint = await mintAgentNFT(
-        wallet,
-        agentName.trim(),
+      setStage("uploading");
+
+      // 1) Upload image + JSON to Arweave via Bundlr (paid from connected wallet)
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "https://hyperx402.app";
+
+      const { uri } = await uploadAgentMetadata(umi, {
+        name: agentName.trim(),
+        description: prompt.trim(),
+        image: imgFile,
+        symbol: "H402",
         model,
         temperature,
-        prompt.trim(),
-        imgFile
-      );
-      setMintAddress(mint);
+        // We set a provisional external_url (will be patched after mint to include the mint)
+        external_url: origin,
+      });
+
+      setStage("minting");
+
+      // 2) Mint the NFT using that metadata URI
+      const mintPk = await mintAgentNFT(umi, {
+        name: agentName.trim(),
+        uri,
+        symbol: "H402",
+        sellerFeeBps: 0,
+      });
+
+      setMintAddress(mintPk);
+
+      // 3) (Optional) Patch external_url => <origin>/agent/<mint>
+      //    This will NO-OP if you haven't exported updateAgentExternalUrl from upload.ts.
+      try {
+        setStage("finalizing");
+        const agentUrl = `${origin}/agent/${mintPk}`;
+        // @ts-expect-error - optional helper
+        if (typeof updateAgentExternalUrl === "function") {
+          // This helper should upload a small JSON (same data but with updated external_url)
+          // and call updateV1 to point the NFT to the new URI.
+          await updateAgentExternalUrl(umi, mintPk, agentUrl);
+        }
+      } catch {
+        // ignore; still a valid mint even if we don't patch external_url
+      } finally {
+        setStage("idle");
+      }
     } catch (e: any) {
       setErr(e?.message ?? String(e));
     } finally {
@@ -58,14 +126,22 @@ export default function MintPage() {
     }
   }
 
+  const shortPk = publicKey
+    ? `${publicKey.toBase58().slice(0, 4)}…${publicKey.toBase58().slice(-4)}`
+    : "Not connected";
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-6 flex items-center justify-between">
-        <Link href="/" className="cta px-4 py-2 inline-flex items-center gap-2 hover:bg-white/10">
+        <Link
+          href="/"
+          className="cta px-4 py-2 inline-flex items-center gap-2 hover:bg-white/10"
+        >
           ← Back
         </Link>
-
-        <WalletMultiButton className="!bg-white/10 !rounded-xl !border !border-white/10 hover:!bg-white/20" />
+        <ClientOnly>
+          <WalletMultiButton className="!bg-white/10 !rounded-xl !border !border-white/10 hover:!bg-white/20" />
+        </ClientOnly>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -89,9 +165,7 @@ export default function MintPage() {
                 onChange={(e) => setModel(e.target.value)}
                 className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 outline-none"
               >
-                <option value="gpt-4o-mini">gpt-4o-mini</option>
-                <option value="gpt-4o">gpt-4o</option>
-                <option value="llama-3.1-70b">llama-3.1-70b</option>
+                <option value="Claude-3.5-Sonnet">Claude-3.5-Sonnet</option>
               </select>
             </div>
 
@@ -105,13 +179,17 @@ export default function MintPage() {
                 max={1}
                 step={0.01}
                 value={temperature}
-                onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                onChange={(e) =>
+                  setTemperature(parseFloat((e.target as HTMLInputElement).value))
+                }
                 className="w-full accent-rose-400"
               />
             </div>
           </div>
 
-          <label className="block text-sm opacity-70 mt-5 mb-1">System Prompt</label>
+          <label className="block text-sm opacity-70 mt-5 mb-1">
+            System Prompt
+          </label>
           <textarea
             rows={6}
             value={prompt}
@@ -122,26 +200,29 @@ export default function MintPage() {
           <div className="mt-6">
             <label className="block text-sm opacity-70 mb-2">Agent Image</label>
             <input type="file" accept="image/png,image/jpeg" onChange={onPickImage} />
-            <p className="text-xs opacity-60 mt-1">PNG/JPG recommended.</p>
+            <p className="text-xs opacity-60 mt-1">
+              PNG/JPG recommended (≤ 4 MB). Upload happens on mint.
+            </p>
           </div>
 
           <div className="mt-6 flex items-center gap-4">
             <button
               onClick={onMint}
-              disabled={minting || !wallet.connected}
+              disabled={minting || !walletReady}
               className="cta cta-primary px-5 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {minting ? "Minting…" : "Mint Agent NFT"}
+              {minting ? (stage === "uploading" ? "Uploading…" : stage === "minting" ? "Minting…" : "Finalizing…") : "Mint Agent NFT"}
             </button>
-            <p className="text-sm opacity-70">
-              Wallet:{" "}
-              {wallet.publicKey
-                ? wallet.publicKey.toBase58().slice(0, 4) +
-                  "… " +
-                  wallet.publicKey.toBase58().slice(-4)
-                : "Not connected"}
-            </p>
+            <p className="text-sm opacity-70">Wallet: {shortPk}</p>
           </div>
+
+          {!walletReady && (
+            <div className="mt-4 text-sm text-amber-300 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2">
+              Your connected wallet doesn’t support <code>signMessage</code>. Use{" "}
+              <b>Phantom</b>, <b>Backpack</b>, or <b>Solflare</b> desktop extension, then
+              reconnect.
+            </div>
+          )}
 
           {err && (
             <div className="mt-4 text-sm text-red-300 border border-red-500/30 bg-red-500/10 rounded-lg px-3 py-2">
@@ -150,16 +231,24 @@ export default function MintPage() {
           )}
 
           {mintAddress && (
-            <div className="mt-4 text-sm border border-emerald-500/30 bg-emerald-500/10 rounded-lg px-3 py-2">
-              ✅ Minted! New mint:{" "}
-              <a
-                className="underline"
-                href={`https://solscan.io/token/${mintAddress}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {mintAddress}
-              </a>
+            <div className="mt-4 text-sm border border-emerald-500/30 bg-emerald-500/10 rounded-lg px-3 py-2 space-y-2">
+              <div>
+                ✅ Minted! New mint:&nbsp;
+                <a
+                  className="underline"
+                  href={`https://solscan.io/token/${mintAddress}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {mintAddress}
+                </a>
+              </div>
+              <div className="flex gap-2">
+                <Link href={`/agent/${mintAddress}`} className="cta cta-primary">Open Agent</Link>
+                <button className="cta" onClick={() => router.push("/my-agents")}>
+                  Go to My Agents
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -188,10 +277,10 @@ export default function MintPage() {
           <div className="mt-6 flex gap-3">
             <button
               onClick={onMint}
-              disabled={minting || !wallet.connected}
+              disabled={minting || !walletReady}
               className="cta cta-primary px-5 py-3 flex-1 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {minting ? "Minting…" : "Mint Agent NFT"}
+              {minting ? (stage === "uploading" ? "Uploading…" : stage === "minting" ? "Minting…" : "Finalizing…") : "Mint Agent NFT"}
             </button>
             <Link href="/" className="cta px-5 py-3 text-center flex-1">
               Back to Home

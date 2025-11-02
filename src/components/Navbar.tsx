@@ -20,6 +20,7 @@ export function Navbar() {
             <Link href="/features" className="hover:opacity-100">Features</Link>
             <Link href="/stats" className="hover:opacity-100">Stats</Link>
             <Link href="/docs" className="hover:opacity-100">Docs</Link>
+            <Link href="/my-agents" className="hover:opacity-100">My Agents</Link>
           </nav>
 
           {/* Guard the wallet button to client-only to avoid hydration mismatch */}

@@ -1,53 +1,57 @@
-// src/lib/umi.ts
-import type { Umi } from "@metaplex-foundation/umi";
-import { publicKey } from "@metaplex-foundation/umi";
-import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import { walletAdapterIdentity } from "@metaplex-foundation/umi-signer-wallet-adapters";
+"use client";
+
+import { useEffect, useRef } from "react";
+import { createUmi, Umi } from "@metaplex-foundation/umi-bundle-defaults";
 import { mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
-import type { WalletContextState } from "@solana/wallet-adapter-react";
-import { clusterApiUrl } from "@solana/web3.js";
-import {
-  TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+import { walletAdapterIdentity } from "@metaplex-foundation/umi-signer-wallet-adapters";
+import { bundlrUploader } from "@metaplex-foundation/umi-uploader-bundlr";
+import { useWallet, WalletContextState } from "@solana/wallet-adapter-react";
 
-let _umi: Umi | null = null;
+/** Build a fresh Umi with RPC + Bundlr (no wallet bound yet) */
+function buildBaseUmi(endpoint: string, bundlrNode: string): Umi {
+  return createUmi(endpoint)
+    .use(mplTokenMetadata())
+    // `providerUrl` is optional; Umi will use its own RPC. You can re-add if needed.
+    .use(bundlrUploader({ address: bundlrNode }));
+}
 
-export function getUmi(wallet?: WalletContextState | null): Umi {
-  const endpoint =
-    process.env.NEXT_PUBLIC_HELIUS_RPC?.trim() ||
-    clusterApiUrl("mainnet-beta");
+/** Non-hook helper for libs (mint/update/etc.) */
+export function getUmi(wallet?: WalletContextState) {
+  const helius = process.env.NEXT_PUBLIC_HELIUS_RPC;
+  const fallback = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://mainnet.helius-rpc.com";
+  const bundlr = process.env.NEXT_PUBLIC_BUNDLR_NODE || "https://node1.bundlr.network";
+  const endpoint = helius || fallback;
 
-  if (!_umi) {
-    _umi = createUmi(endpoint).use(mplTokenMetadata());
-
-    // Helper to (re)register a program with an isOnCluster shim
-    const forceProgram = (name: string, pk: string) => {
-      // remove any stale entry, then add our explicit descriptor
-      try {
-        // @ts-ignore — remove if exists
-        _umi!.programs.remove(name as any);
-      } catch {}
-      _umi!.programs.add({
-        name,
-        publicKey: publicKey(pk),
-        // Some libs call this; make it always true on mainnet usage.
-        // Signature matches Umi's Program interface optional method.
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        isOnCluster: (_umiInstance?: Umi) => true,
-      } as any);
-    };
-
-    forceProgram("splToken", TOKEN_PROGRAM_ID.toBase58());
-    forceProgram(
-      "splAssociatedToken",
-      ASSOCIATED_TOKEN_PROGRAM_ID.toBase58()
-    );
+  const umi = buildBaseUmi(endpoint, bundlr);
+  if (wallet?.publicKey) {
+    // pass the adapter itself, not a custom object
+    umi.use(walletAdapterIdentity(wallet as any));
   }
+  return umi;
+}
 
-  if (wallet?.wallet?.adapter) {
-    _umi.use(walletAdapterIdentity(wallet.wallet.adapter));
-  }
+/** React hook version for components */
+export function useUmi() {
+  const wallet = useWallet();
 
-  return _umi;
+  const helius = process.env.NEXT_PUBLIC_HELIUS_RPC;
+  const fallback = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://mainnet.helius-rpc.com";
+  const bundlr = process.env.NEXT_PUBLIC_BUNDLR_NODE || "https://node1.bundlr.network";
+  const endpoint = helius || fallback;
+
+  const umiRef = useRef<Umi>(buildBaseUmi(endpoint, bundlr));
+
+  // Rebuild when RPC changes
+  useEffect(() => {
+    umiRef.current = buildBaseUmi(endpoint, bundlr);
+  }, [endpoint, bundlr]);
+
+  // Bind wallet identity whenever it’s available
+  useEffect(() => {
+    if (wallet?.publicKey) {
+      umiRef.current.use(walletAdapterIdentity(wallet as any));
+    }
+  }, [wallet]);
+
+  return umiRef.current;
 }

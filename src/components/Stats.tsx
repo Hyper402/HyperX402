@@ -6,7 +6,7 @@ export function Stats() {
       <div className="section-wash" />
       <div className="mx-auto max-w-7xl px-4 relative z-[1]">
         <h2 className="text-3xl md:text-4xl font-bold">Network Stats</h2>
-        <p className="opacity-70 mt-2">Live activity across the HyperX402 ecosystem (24h).</p>
+        <p className="opacity-70 mt-2">Live activity across the X402 ecosystem (24h).</p>
 
         <div className="mt-8 grid md:grid-cols-3 gap-6">
           <StatCard label="Transactions" value="—" sub="in the last 24 hours" />

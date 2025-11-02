@@ -3,16 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
-    "@metaplex-foundation/umi": "^1.4.1",
-    "@metaplex-foundation/umi-bundle-defaults": "^1.4.1",
+    "@metaplex-foundation/mpl-token-metadata": "3.4.0",
+    "@metaplex-foundation/mpl-toolbox": "^0.10.0",
+    "@metaplex-foundation/umi": "1.4.1",
+    "@metaplex-foundation/umi-bundle-defaults": "1.4.1",
     "@metaplex-foundation/umi-signer-wallet-adapters": "^1.4.1",
+    "@metaplex-foundation/umi-uploader-arweave-via-turbo": "^1.4.1",
+    "@metaplex-foundation/umi-uploader-bundlr": "0.9.2",
     "@metaplex-foundation/umi-uploader-irys": "^1.4.1",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
