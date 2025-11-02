@@ -9,7 +9,8 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import ClientOnly from "@/components/ClientOnly";
 import { useUmi } from "@/lib/umi";
 import { mintAgentNFT } from "@/lib/mintAgent";
-import { uploadAgentMetadata } from "@/lib/upload";
+import { uploadAgentMetadata /* , updateAgentExternalUrl */ } from "@/lib/upload";
+import { updateAgentExternalUrl } from "@/lib/updateMetadata";
 
 export default function MintPage() {
   const router = useRouter();
